@@ -1,0 +1,284 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <!-- Professional Profile Card -->
+        <div class="col-md-3">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Profile Status</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="flex-grow-1">
+                            <h6 class="mb-0">{{ current_user.username }}</h6>
+                            <small class="text-muted">{{ professional_profile.service.name }}</small>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <span class="badge {% if professional_profile.is_approved %}bg-success{% else %}bg-warning{% endif %}">
+                            {% if professional_profile.is_approved %}Approved{% else %}Pending Approval{% endif %}
+                        </span>
+                    </div>
+                    <div class="mb-3">
+                        <strong>Rating:</strong> {{ "%.1f"|format(professional_profile.avg_rating) }} / 5.0
+                    </div>
+                    <div class="mb-3">
+                        <strong>Total Services:</strong> {{ professional_profile.total_services }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-9">
+            <!-- Available Requests -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Available Service Requests</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Customer</th>
+                                    <th>Service</th>
+                                    <th>Date & Time</th>
+                                    <th>Location</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for request in available_requests %}
+                                <tr>
+                                    <td>{{ request.customer.username }}</td>
+                                    <td>{{ request.service.name }}</td>
+                                    <td>{{ request.date_of_request.strftime('%Y-%m-%d %H:%M') }}</td>
+                                    <td>{{ request.location }}</td>
+                                    <td>
+                                        <a href="{{ url_for('professional.accept_request', request_id=request.id) }}" 
+                                           class="btn btn-sm btn-success">Accept</a>
+                                        <a href="{{ url_for('professional.reject_request', request_id=request.id) }}" 
+                                           class="btn btn-sm btn-danger">Reject</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                                {% if not available_requests %}
+                                <tr>
+                                    <td colspan="5" class="text-center">No available service requests</td>
+                                </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Assigned Requests -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">My Assigned Requests</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Customer</th>
+                                    <th>Service</th>
+                                    <th>Date & Time</th>
+                                    <th>Location</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for request in assigned_requests %}
+                                <tr>
+                                    <td>{{ request.customer.username }}</td>
+                                    <td>{{ request.service.name }}</td>
+                                    <td>{{ request.date_of_request.strftime('%Y-%m-%d %H:%M') }}</td>
+                                    <td>{{ request.location }}</td>
+                                    <td>
+                                        <span class="badge bg-info">{{ request.service_status }}</span>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-primary" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#requestDetailsModal{{ request.id }}">
+                                            View Details
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                                {% if not assigned_requests %}
+                                <tr>
+                                    <td colspan="6" class="text-center">No assigned requests</td>
+                                </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Completed Requests -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Completed Requests</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Customer</th>
+                                    <th>Service</th>
+                                    <th>Date Completed</th>
+                                    <th>Location</th>
+                                    <th>Rating</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for request in completed_requests %}
+                                <tr>
+                                    <td>{{ request.customer.username }}</td>
+                                    <td>{{ request.service.name }}</td>
+                                    <td>{{ request.date_of_completion.strftime('%Y-%m-%d %H:%M') }}</td>
+                                    <td>{{ request.location }}</td>
+                                    <td>
+                                        {% if request.rating %}
+                                            {{ request.rating }} / 5
+                                        {% else %}
+                                            Not rated
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                                {% if not completed_requests %}
+                                <tr>
+                                    <td colspan="5" class="text-center">No completed requests</td>
+                                </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+                        <!-- Charts Row -->
+            <div class="row my-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">My Ratings</h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="professionalRatingChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">My Service Requests</h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="professionalRequestsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Request Details Modal -->
+{% for request in assigned_requests %}
+<div class="modal fade" id="requestDetailsModal{{ request.id }}" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Request Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <h6>Customer Information</h6>
+                    <p><strong>Name:</strong> {{ request.customer.username }}</p>
+                    <p><strong>Location:</strong> {{ request.location }}</p>
+                </div>
+                <div class="mb-3">
+                    <h6>Service Details</h6>
+                    <p><strong>Service:</strong> {{ request.service.name }}</p>
+                    <p><strong>Date:</strong> {{ request.date_of_request.strftime('%Y-%m-%d %H:%M') }}</p>
+                    <p><strong>Status:</strong> {{ request.service_status }}</p>
+                    {% if request.remarks %}
+                    <p><strong>Remarks:</strong> {{ request.remarks }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<!-- Include Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    // Professional Rating Chart
+    var ctxRating = document.getElementById('professionalRatingChart').getContext('2d');
+    var professionalRatingChart = new Chart(ctxRating, {
+        type: 'bar',
+        data: {
+            labels: ['1 Star', '2 Stars', '3 Stars', '4 Stars', '5 Stars'],
+            datasets: [{
+                label: 'Number of Ratings',
+                data: {{ rating_data|tojson }},
+                backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    // Professional Service Requests Chart
+    var ctxRequests = document.getElementById('professionalRequestsChart').getContext('2d');
+    var professionalRequestsChart = new Chart(ctxRequests, {
+        type: 'pie',
+        data: {
+            labels: ['Received', 'Closed', 'Rejected'],
+            datasets: [{
+                data: {{ service_request_data|tojson }},
+                backgroundColor: [
+                    'rgba(255, 206, 86, 0.6)',
+                    'rgba(75, 192, 192, 0.6)',
+                    'rgba(255, 99, 132, 0.6)',
+                ],
+                borderColor: [
+                    'rgba(255, 206, 86, 1)',
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(255, 99, 132, 1)',
+                ],
+                borderWidth: 1
+            }],
+            options: {
+            responsive: true,
+            radius: '60%'
+        },
+
+        }
+    });
+</script>
+{% endblock %}

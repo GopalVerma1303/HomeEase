@@ -1,0 +1,145 @@
+{% extends "base.html" %} {% block content %}
+<div class="container-fluid mt-4">
+  <div class="row mb-4">
+    <div class="col-md-12">
+      <div class="card">
+        <div class="card-header">
+          <div class="d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">Manage Customers</h5>
+            <div class="d-flex gap-2">
+              <form class="d-flex">
+                <input
+                  type="text"
+                  name="search"
+                  class="form-control"
+                  placeholder="Search customers..."
+                />
+                <button type="submit" class="btn btn-primary ms-2">
+                  Search
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Username</th>
+                  <th>Email</th>
+                  <th>Join Date</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for user in users %} {% if user.role == 'customer' %}
+                <tr>
+                  <td>{{ user.id }}</td>
+                  <td>{{ user.username }}</td>
+                  <td>{{ user.email }}</td>
+                  <td>{{ user.date_created.strftime('%Y-%m-%d') }}</td>
+                  <td>
+                    <span
+                      class="badge {% if user.is_blocked %}bg-danger{% else %}bg-success{% endif %}"
+                    >
+                      {{ 'Blocked' if user.is_blocked else 'Active' }}
+                    </span>
+                  </td>
+                  <td>
+                    <a
+                      href="{{ url_for('admin.block_user', user_id=user.id) }}"
+                      class="btn btn-sm {% if user.is_blocked %}btn-success{% else %}btn-danger{% endif %}"
+                    >
+                      {{ 'Unblock' if user.is_blocked else 'Block' }}
+                    </a>
+                    <button
+                      class="btn btn-sm btn-info"
+                      data-bs-toggle="modal"
+                      data-bs-target="#viewUserModal{{ user.id }}"
+                    >
+                      View Details
+                    </button>
+                  </td>
+                </tr>
+                {% endif %} {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- User Details Modals -->
+{% for user in users %} {% if user.role == 'customer' %}
+<div class="modal fade" id="viewUserModal{{ user.id }}" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Customer Details</h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <h6>Basic Information</h6>
+          <p><strong>Username:</strong> {{ user.username }}</p>
+          <p><strong>Email:</strong> {{ user.email }}</p>
+          <p>
+            <strong>Join Date:</strong> {{
+            user.date_created.strftime('%Y-%m-%d') }}
+          </p>
+          <p>
+            <strong>Status:</strong> {{ 'Blocked' if user.is_blocked else
+            'Active' }}
+          </p>
+          <p><strong>Address:</strong> {{ user.address }}</p>
+          <p><strong>Pin Code:</strong> {{ user.pin_code }}</p>
+        </div>
+        <div class="mb-3">
+          <h6>Service History</h6>
+          <p>
+            <strong>Total Requests:</strong> {{ user.customer_requests|length }}
+          </p>
+          {% if user.customer_requests %}
+          <div class="table-responsive">
+            <table class="table table-sm">
+              <thead>
+                <tr>
+                  <th>Service</th>
+                  <th>Date</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for request in user.customer_requests %}
+                <tr>
+                  <td>{{ request.service.name }}</td>
+                  <td>{{ request.date_of_request.strftime('%Y-%m-%d') }}</td>
+                  <td>{{ request.service_status.capitalize() }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <p>No service requests found.</p>
+          {% endif %}
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %} {% endfor %} {% endblock %}

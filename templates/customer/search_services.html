@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Search Filters</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label for="search_term" class="form-label">Search Services</label>
+                            <input type="text" class="form-control" id="search_term" name="search_term" 
+                                   value="{{ request.form.get('search_term', '') }}"
+                                   placeholder="Search by service name, description...">
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">Search</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="row">
+                {% for service in services %}
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ service.name }}</h5>
+                            <h6 class="card-subtitle mb-2 text-muted">₹{{ service.base_price }}</h6>
+                            <p class="card-text">{{ service.description }}</p>
+                            <ul class="list-unstyled">
+                                <li><small class="text-muted">Duration: {{ service.time_required }} minutes</small></li>
+                            </ul>
+                        </div>
+                        <div class="card-footer bg-transparent">
+                            <a href="{{ url_for('customer.create_request', service_id=service.id) }}" class="btn btn-primary w-100">Book Now</a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+
+                {% if not services %}
+                <div class="col-12">
+                    <div class="alert alert-info" role="alert">
+                        No services found matching your criteria. Try adjusting your search filters.
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

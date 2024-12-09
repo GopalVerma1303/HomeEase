@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- Stats Row -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total Customers</h5>
+                    <h2 class="mb-0">{{ total_customers }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Service Professionals</h5>
+                    <h2 class="mb-0">{{ total_professionals }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Available Services</h5>
+                    <h2 class="mb-0">{{ total_services }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Pending Approvals</h5>
+                    <h2 class="mb-0">{{ pending_approvals|length }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <a href="{{ url_for('admin.manage_services') }}" class="btn btn-primary btn-lg w-100">
+                                Manage Services
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{{ url_for('admin.manage_professionals') }}" class="btn btn-success btn-lg w-100">
+                                Manage Professionals
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{{ url_for('admin.manage_customers') }}" class="btn btn-info btn-lg w-100">
+                                Manage Customers
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{{ url_for('admin.manage_service_requests') }}" class="btn btn-warning btn-lg w-100">
+                                Service Requests
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity and Pending Approvals -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Recent Service Requests</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Service</th>
+                                    <th>Customer</th>
+                                    <th>Professional</th>
+                                    <th>Status</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for request in recent_requests %}
+                                <tr>
+                                    <td>{{ request.service.name }}</td>
+                                    <td>{{ request.customer.username }}</td>
+                                    <td>
+                                        {% if request.professional %}
+                                            {{ request.professional.user.username }}
+                                        {% else %}
+                                            Not Assigned
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge 
+                                            {% if request.service_status == 'requested' %}bg-warning
+                                            {% elif request.service_status == 'assigned' %}bg-info
+                                            {% elif request.service_status == 'completed' %}bg-success
+                                            {% else %}bg-danger{% endif %}">
+                                            {{ request.service_status }}
+                                        </span>
+                                    </td>
+                                    <td>{{ request.date_of_request.strftime('%Y-%m-%d %H:%M') }}</td>
+                                </tr>
+                                {% endfor %}
+                                {% if not recent_requests %}
+                                <tr>
+                                    <td colspan="5" class="text-center">No recent service requests</td>
+                                </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Pending Approvals</h5>
+                </div>
+                <div class="card-body">
+                    {% if pending_approvals %}
+                        <div class="list-group">
+                            {% for prof in pending_approvals %}
+                            <div class="list-group-item">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">{{ prof.user.username }}</h6>
+                                    <small>{{ prof.service.name }}</small>
+                                </div>
+                                <p class="mb-1">Experience: {{ prof.experience }} years</p>
+                                <small>
+                                    <a href="{{ url_for('admin.approve_professional', professional_id=prof.id) }}" 
+                                       class="btn btn-sm btn-success">Approve</a>
+                                </small>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-center mb-0">No pending approvals</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Overall Customer Rating</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="customerRatingChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Service Requests</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="serviceRequestsChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Include Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    // Customer Rating Chart
+    var ctxRating = document.getElementById('customerRatingChart').getContext('2d');
+    var customerRatingChart = new Chart(ctxRating, {
+        type: 'bar',
+        data: {
+            labels: ['1 Star', '2 Stars', '3 Stars', '4 Stars', '5 Stars'],
+            datasets: [{
+                label: 'Number of Ratings',
+                data: {{ rating_data|tojson }},
+                backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    // Service Requests Chart
+    var ctxRequests = document.getElementById('serviceRequestsChart').getContext('2d');
+    var serviceRequestsChart = new Chart(ctxRequests, {
+        type: 'pie',
+        data: {
+            labels: ['Received', 'Closed', 'Rejected'],
+            datasets: [{
+                data: {{ service_request_data|tojson }},
+                backgroundColor: [
+                    'rgba(255, 206, 86, 0.6)',
+                    'rgba(75, 192, 192, 0.6)',
+                    'rgba(255, 99, 132, 0.6)',
+
+                ],
+                borderColor: [
+                    'rgba(255, 206, 86, 1)',
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(255, 99, 132, 1)',
+
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            radius: '60%'
+        }
+    });
+</script>
+{% endblock %}

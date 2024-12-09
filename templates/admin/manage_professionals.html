@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">Manage Professionals</h5>
+                        <div class="d-flex gap-2">
+                            <select class="form-select" onchange="window.location.href='?filter=' + this.value">
+                                <option value="all" {% if current_filter == 'all' %}selected{% endif %}>All</option>
+                                <option value="pending" {% if current_filter == 'pending' %}selected{% endif %}>Pending Approval</option>
+                                <option value="approved" {% if current_filter == 'approved' %}selected{% endif %}>Approved</option>
+                            </select>
+                            <form class="d-flex">
+                                <input type="text" name="search" class="form-control" placeholder="Search professionals...">
+                                <button type="submit" class="btn btn-primary ms-2">Search</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Service</th>
+                                    <th>Experience</th>
+                                    <th>Average Rating</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for prof in professionals %}
+                                <tr>
+                                    <td>{{ prof.id }}</td>
+                                    <td>{{ prof.user.username }}</td>
+                                    <td>{{ prof.service.name }}</td>
+                                    <td>{{ prof.experience }} years</td>
+                                    <td>
+                                        {% if prof.avg_rating > 0 %}
+                                            {{ "%.1f"|format(prof.avg_rating) }} / 5
+                                        {% else %}
+                                            N/A
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge {% if prof.is_approved %}bg-success{% else %}bg-warning{% endif %}">
+                                            {{ 'Approved' if prof.is_approved else 'Pending' }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if not prof.is_approved %}
+                                        <a href="{{ url_for('admin.approve_professional', professional_id=prof.id) }}" 
+                                           class="btn btn-sm btn-success">
+                                            Approve
+                                        </a>
+                                        {% endif %}
+                                        <button class="btn btn-sm btn-info" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#viewDetailsModal{{ prof.id }}">
+                                            View Details
+                                        </button>
+                                        <a href="{{ url_for('admin.block_user', user_id=prof.user.id) }}" 
+                                           class="btn btn-sm {% if prof.user.is_blocked %}btn-warning{% else %}btn-danger{% endif %}">
+                                            {{ 'Unblock' if prof.user.is_blocked else 'Block' }}
+                                        </a>
+                                    </td>
+                                </tr>
+
+                                <!-- Details Modal -->
+                                <div class="modal fade" id="viewDetailsModal{{ prof.id }}" tabindex="-1">
+                                    <div class="modal-dialog modal-lg">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Professional Details</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div class="mb-3">
+                                                    <h6>Personal Information</h6>
+                                                    <p><strong>Name:</strong> {{ prof.user.username }}</p>
+                                                    <p><strong>Email:</strong> {{ prof.user.email }}</p>
+                                                    <p><strong>Join Date:</strong> {{ prof.user.date_created.strftime('%Y-%m-%d') }}</p>
+                                                    <p><strong>Address:</strong> {{ prof.user.address }}</p>
+                                                    <p><strong>Pin Code:</strong> {{ prof.user.pin_code }}</p>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <h6>Professional Information</h6>
+                                                    <p><strong>Service Area:</strong> {{ prof.service.name }}</p>
+                                                    <p><strong>Experience:</strong> {{ prof.experience }} years</p>
+                                                    <p><strong>Average Rating:</strong> 
+                                                        {% if prof.avg_rating > 0 %}
+                                                            {{ "%.1f"|format(prof.avg_rating) }} / 5
+                                                        {% else %}
+                                                            N/A
+                                                        {% endif %}
+                                                    </p>
+                                                    <p><strong>Total Services:</strong> {{ prof.total_services }}</p>
+                                                    <p><strong>Description:</strong> {{ prof.description or 'Not provided' }}</p>
+                                                </div>
+{% if prof.documents %}
+<div class="mb-3">
+    <h6>Documents</h6>
+    <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDocuments{{ prof.id }}" aria-expanded="false" aria-controls="collapseDocuments{{ prof.id }}">
+        View Documents
+    </button>
+    <div class="collapse mt-2" id="collapseDocuments{{ prof.id }}">
+        <div class="card card-body">
+            <ul class="list-unstyled">
+                {% for document in prof.documents.split(',') %}
+                    <li><a href="{{ url_for('static', filename='uploads/' + prof.user_id|string + '/' + document.strip()) }}" target="_blank">{{ document.strip() }}</a></li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endif %}
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

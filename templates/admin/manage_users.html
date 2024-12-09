@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">Manage Users</h5>
+                        <div class="d-flex gap-2">
+                            <select class="form-select" onchange="window.location.href='?role=' + this.value">
+                                <option value="all" {% if current_filter == 'all' %}selected{% endif %}>All Users</option>
+                                <option value="customer" {% if current_filter == 'customer' %}selected{% endif %}>Customers</option>
+                                <option value="professional" {% if current_filter == 'professional' %}selected{% endif %}>Professionals</option>
+                            </select>
+                            <form class="d-flex">
+                                <input type="text" name="search" class="form-control" placeholder="Search users...">
+                                <button type="submit" class="btn btn-primary ms-2">Search</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Username</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
+                                    <th>Join Date</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in users %}
+                                {% if user.role != 'admin' %}
+                                <tr>
+                                    <td>{{ user.id }}</td>
+                                    <td>{{ user.username }}</td>
+                                    <td>{{ user.email }}</td>
+                                    <td>{{ user.role.capitalize() }}</td>
+                                    <td>{{ user.date_created.strftime('%Y-%m-%d') }}</td>
+                                    <td>
+                                        <span class="badge {% if user.is_blocked %}bg-danger{% else %}bg-success{% endif %}">
+                                            {{ 'Blocked' if user.is_blocked else 'Active' }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('admin.block_user', user_id=user.id) }}" 
+                                           class="btn btn-sm {% if user.is_blocked %}btn-success{% else %}btn-danger{% endif %}">
+                                            {{ 'Unblock' if user.is_blocked else 'Block' }}
+                                        </a>
+                                        <button class="btn btn-sm btn-info" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#viewUserModal{{ user.id }}">
+                                            View Details
+                                        </button>
+                                    </td>
+                                </tr>
+
+                                <!-- User Details Modal -->
+                                <div class="modal fade" id="viewUserModal{{ user.id }}" tabindex="-1">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">User Details</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div class="mb-3">
+                                                    <h6>Basic Information</h6>
+                                                    <p><strong>Username:</strong> {{ user.username }}</p>
+                                                    <p><strong>Email:</strong> {{ user.email }}</p>
+                                                    <p><strong>Role:</strong> {{ user.role.capitalize() }}</p>
+                                                    <p><strong>Join Date:</strong> {{ user.date_created.strftime('%Y-%m-%d') }}</p>
+                                                    <p><strong>Status:</strong> {{ 'Blocked' if user.is_blocked else 'Active' }}</p>
+                                                </div>
+                                                {% if user.role == 'customer' %}
+                                                <div class="mb-3">
+                                                    <h6>Service History</h6>
+                                                    <p><strong>Total Requests:</strong> {{ user.customer_requests|length }}</p>
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

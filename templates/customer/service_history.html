@@ -1,0 +1,163 @@
+{% extends "base.html" %} {% block content %}
+<div class="container mt-4">
+  <div class="card">
+    <div class="card-header">
+      <h5 class="card-title mb-0">Service History</h5>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>Service</th>
+              <th>Professional</th>
+              <th>Date</th>
+              <th>Status</th>
+              <th>Rating</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for request in service_requests %}
+            <tr>
+              <td>{{ request.service.name }}</td>
+              <td>
+                {{ request.professional.user.username if request.professional
+                else 'Not Assigned' }}
+              </td>
+              <td>{{ request.date_of_request.strftime('%Y-%m-%d %H:%M') }}</td>
+              <td>
+                <span
+                  class="badge {% if request.service_status == 'requested' %}bg-warning {% elif request.service_status == 'assigned' %}bg-info {% elif request.service_status == 'completed' %}bg-success {% else %}bg-danger{% endif %}"
+                >
+                  {{ request.service_status }}
+                </span>
+              </td>
+              <td>
+                {% if request.rating %} {% for i in range(request.rating) %}⭐{%
+                endfor %} {% else %} - {% endif %}
+              </td>
+              <td>
+                {% if request.service_status == 'assigned' %}
+                <a
+                  href="{{ url_for('customer.close_request', request_id=request.id) }}"
+                  class="btn btn-sm btn-success"
+                  >Close</a
+                >
+                {% endif %} {% if request.service_status == 'completed' and not
+                request.has_review %}
+                <button
+                  class="btn btn-sm btn-primary"
+                  data-bs-toggle="modal"
+                  data-bs-target="#reviewModal{{ request.id }}"
+                >
+                  Review
+                </button>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      {% if not service_requests %}
+      <div class="alert alert-info" role="alert">
+        No service history found.
+        <a href="{{ url_for('customer.search_services') }}">Book a service</a>
+        to get started!
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Review Modals -->
+  {% for request in service_requests %} {% if request.service_status ==
+  'completed' and not request.has_review %}
+  <div class="modal fade" id="reviewModal{{ request.id }}" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Review Service</h5>
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="modal"
+          ></button>
+        </div>
+        <form
+          action="{{ url_for('customer.submit_review', request_id=request.id) }}"
+          method="POST"
+        >
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label">Rating</label>
+              <div class="rating">
+                {% for i in range(5, 0, -1) %}
+                <input
+                  type="radio"
+                  name="rating"
+                  value="{{ i }}"
+                  id="star{{ request.id }}{{ i }}"
+                />
+                <label for="star{{ request.id }}{{ i }}">★</label>
+                {% endfor %}
+              </div>
+            </div>
+            <div class="mb-3">
+              <label for="remarks{{ request.id }}" class="form-label"
+                >Remarks</label
+              >
+              <textarea
+                class="form-control"
+                id="remarks{{ request.id }}"
+                name="remarks"
+                rows="3"
+              ></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Close
+            </button>
+            <button type="submit" class="btn btn-primary">Submit Review</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  {% endif %} {% endfor %}
+</div>
+
+<style>
+  .rating {
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+  }
+
+  .rating input {
+    display: none;
+  }
+
+  .rating label {
+    cursor: pointer;
+    font-size: 25px;
+    color: #ddd;
+    padding: 5px;
+  }
+
+  .rating input:checked ~ label {
+    color: #ffd700;
+  }
+
+  .rating label:hover,
+  .rating label:hover ~ label {
+    color: #ffd700;
+  }
+</style>
+{% endblock %}

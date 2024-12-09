@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container my-5">
+  <h2>Register</h2>
+  <form method="POST" enctype="multipart/form-data">
+    <div class="mb-3">
+      <label for="username" class="form-label">Username</label>
+      <input type="text" class="form-control" id="username" name="username" required />
+    </div>
+    <div class="mb-3">
+      <label for="email" class="form-label">Email</label>
+      <input type="email" class="form-control" id="email" name="email" required />
+    </div>
+    <div class="mb-3">
+      <label for="password" class="form-label">Password</label>
+      <input type="password" class="form-control" id="password" name="password" required />
+    </div>
+    <div class="mb-3">
+      <label for="role" class="form-label">Role</label>
+      <select class="form-select" id="role" name="role" required onchange="toggleProfessionalFields()">
+        <option value="customer">Customer</option>
+        <option value="professional">Professional</option>
+      </select>
+    </div>
+    <div class="mb-3">
+      <label for="address" class="form-label">Address</label>
+      <textarea class="form-control" id="address" name="address" required></textarea>
+    </div>
+    <div class="mb-3">
+      <label for="pin_code" class="form-label">Pin Code</label>
+      <input type="text" class="form-control" id="pin_code" name="pin_code" required />
+    </div>
+    <div id="professionalFields" style="display: none;">
+      <div class="mb-3">
+        <label for="service_type" class="form-label">Service Area</label>
+        <select class="form-select" id="service_type" name="service_type">
+          {% for service in services %}
+          <option value="{{ service.id }}">{{ service.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="mb-3">
+        <label for="experience" class="form-label">Experience (years)</label>
+        <input type="number" class="form-control" id="experience" name="experience" />
+      </div>
+      <div class="mb-3">
+        <label for="documents" class="form-label">Upload Documents</label>
+        <input type="file" class="form-control" id="documents" name="documents" multiple />
+        <small class="text-muted">Upload your ID proof and certificates</small>
+      </div>
+    </div>
+    <button type="submit" class="btn btn-primary">Register</button>
+  </form>
+</div>
+
+<script>
+function toggleProfessionalFields() {
+  var role = document.getElementById('role').value;
+  var professionalFields = document.getElementById('professionalFields');
+  if (role === 'professional') {
+    professionalFields.style.display = 'block';
+  } else {
+    professionalFields.style.display = 'none';
+  }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">Service Requests</h5>
+                        <div class="d-flex gap-2">
+                            <select class="form-select" onchange="window.location.href='?status=' + this.value">
+                                <option value="all" {% if current_filter == 'all' %}selected{% endif %}>All Requests</option>
+                                <option value="requested" {% if current_filter == 'requested' %}selected{% endif %}>Requested</option>
+                                <option value="assigned" {% if current_filter == 'assigned' %}selected{% endif %}>Assigned</option>
+                                <option value="completed" {% if current_filter == 'completed' %}selected{% endif %}>Completed</option>
+                            </select>
+                            <form class="d-flex">
+                                <input type="text" name="search" class="form-control" placeholder="Search requests...">
+                                <button type="submit" class="btn btn-primary ms-2">Search</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Service</th>
+                                    <th>Customer</th>
+                                    <th>Professional</th>
+                                    <th>Status</th>
+                                    <th>Request Date</th>
+                                    <th>Completion Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for request in requests %}
+                                <tr>
+                                    <td>{{ request.id }}</td>
+                                    <td>{{ request.service.name }}</td>
+                                    <td>{{ request.customer.username }}</td>
+                                    <td>
+                                        {% if request.professional %}
+                                            {{ request.professional.user.username }}
+                                        {% else %}
+                                            Not Assigned
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge 
+                                            {% if request.service_status == 'requested' %}bg-warning
+                                            {% elif request.service_status == 'assigned' %}bg-info
+                                            {% elif request.service_status == 'completed' %}bg-success
+                                            {% else %}bg-danger{% endif %}">
+                                            {{ request.service_status }}
+                                        </span>
+                                    </td>
+                                    <td>{{ request.date_of_request.strftime('%Y-%m-%d %H:%M') }}</td>
+                                    <td>
+                                        {% if request.date_of_completion %}
+                                            {{ request.date_of_completion.strftime('%Y-%m-%d %H:%M') }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-info" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#viewRequestModal{{ request.id }}">
+                                            View Details
+                                        </button>
+                                    </td>
+                                </tr>
+
+                                <!-- Request Details Modal -->
+                                <div class="modal fade" id="viewRequestModal{{ request.id }}" tabindex="-1">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Request Details</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div class="mb-3">
+                                                    <h6>Service Information</h6>
+                                                    <p><strong>Service:</strong> {{ request.service.name }}</p>
+                                                    <p><strong>Base Price:</strong> ₹{{ request.service.base_price }}</p>
+                                                    <p><strong>Time Required:</strong> {{ request.service.time_required }} minutes</p>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <h6>Request Details</h6>
+                                                    <p><strong>Status:</strong> {{ request.service_status }}</p>
+                                                    <p><strong>Request Date:</strong> {{ request.date_of_request.strftime('%Y-%m-%d %H:%M') }}</p>
+                                                    {% if request.date_of_completion %}
+                                                    <p><strong>Completion Date:</strong> {{ request.date_of_completion.strftime('%Y-%m-
+                                                    %d %H:%M') }}</p>
+                                                    {% endif %}
+                                                    {% if request.remarks %}
+                                                    <p><strong>Remarks:</strong> {{ request.remarks }}</p>
+                                                    {% endif %}
+                                                </div>
+                                                {% if request.rating %}
+                                                <div class="mb-3">
+                                                    <h6>Review</h6>
+                                                    <p><strong>Rating:</strong> {{ request.rating }} / 5</p>
+                                                    {% if request.review_remarks %}
+                                                    <p><strong>Review:</strong> {{ request.review_remarks }}</p>
+                                                    {% endif %}
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
